@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npm run build && node --import tsx scripts/migrate.ts",
+  "regions": ["fra1"]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "ibanlink-keepincrm",
+  "description": "IBAN Link — платіжні посилання на IBAN для KeepinCRM",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amssster/ibanlink-keepincrm.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "db:up": "docker compose -f compose.yaml -f compose.local.yaml --profile dev up -d db",
+    "build": "next build",
+    "start": "next start",
+    "migrate": "tsx --env-file-if-exists=.env scripts/migrate.ts",
+    "test": "node --env-file-if-exists=.env.test ./node_modules/vitest/vitest.mjs run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test:e2e": "tsx --env-file-if-exists=.env.test scripts/e2e.ts",
+    "secrets": "tsx scripts/secrets.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^0.577.0",
+    "next": "16.4.5",
+    "pg": "^8.16.3",
+    "qrcode": "^1.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tsx": "^4.21.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.10.0",
+    "@types/pg": "^8.16.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "axe-core": "4.14.0",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "16.4.5",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "vitest": "5.1.0"
+  }
+}

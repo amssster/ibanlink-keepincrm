@@ -1,0 +1,71 @@
+# Стабільний ідентифікатор наявних установок IBAN Link і їхніх томів даних.
+name: iban-link
+x-app: &app
+  build: .
+  image: keepincrm-iban-link:local
+  environment: &environment
+    NODE_ENV: production
+    APP_URL: ${APP_URL:?Set APP_URL}
+    DATABASE_URL: postgresql://${POSTGRES_USER:-iban}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-iban}
+    SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET}
+    OWNER_PASSWORD_HASH: ${OWNER_PASSWORD_HASH:-}
+    OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+    WEBHOOK_ISSUE_SECRET: ${WEBHOOK_ISSUE_SECRET:?Set WEBHOOK_ISSUE_SECRET}
+    WEBHOOK_PAYMENT_SECRET: ${WEBHOOK_PAYMENT_SECRET:?Set WEBHOOK_PAYMENT_SECRET}
+  init: true
+  security_opt: ['no-new-privileges:true']
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '3' }
+services:
+  web:
+    <<: *app
+    restart: unless-stopped
+    environment:
+      <<: *environment
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+  migrate:
+    <<: *app
+    command: ['npm', 'run', 'migrate']
+    depends_on: { db: { condition: service_healthy } }
+    restart: 'no'
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-iban}
+      POSTGRES_DB: ${POSTGRES_DB:-iban}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: ['database:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-iban}
+      PGDATABASE: ${POSTGRES_DB:-iban}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    entrypoint: ['sh', '/ops/backup-loop.sh']
+    volumes: ['./ops:/ops:ro', 'backups:/backups']
+    depends_on: { migrate: { condition: service_completed_successfully } }
+volumes:
+  database:
+  backups:

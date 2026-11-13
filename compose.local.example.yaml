@@ -1,0 +1,14 @@
+# Локальна розробка та перевірка Docker без домену/сертифіката.
+# Скопіюйте у compose.local.yaml для локального використання:
+#   cp compose.local.example.yaml compose.local.yaml
+services:
+  web:
+    ports: ['127.0.0.1:3000:3000']
+    deploy:
+      replicas: 1
+  caddy:
+    profiles: ['https']
+  # Лише локальна розробка: Postgres доступний на 127.0.0.1:55432.
+  db:
+    profiles: ['dev']
+    ports: ['127.0.0.1:55432:5432']
